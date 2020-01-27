@@ -47,14 +47,14 @@ class FireService {
          maps.push({mapName : map.val().mapName, statut : map.val().statut, key : map.key})
       })
       let message = {error : 'No data'};
-      if(maps.length < 0) {
+      if([] === maps) {
         resolve(message)
       } else {
         resolve(maps);
       }
     })
   }
-    async updateStatut(key,maps) {
+  async updateStatut(key,maps) {
     const uid = auth().currentUser.uid;
     for(let i = 0; i < maps.length; i++) {
       if(maps[i].key === key) {
@@ -78,6 +78,32 @@ class FireService {
       })
     })
      
+  }
+  async addAnnotation(value,mapKey) {
+    const uid = auth().currentUser.uid;
+    const ref = await database().ref(`/users/${uid}/maps/${mapKey}/Annotation`);
+    ref.push(value);
+  }
+ async getAnnotation(mapKey) {
+    const uid = auth().currentUser.uid;
+    const ref = database().ref(`/users/${uid}/maps/${mapKey}/Annotation`);
+    const snapshot = await ref.once('value');
+    return new Promise((resolve, reject) => {
+    if(!snapshot) {
+      let message = {error : 'no data'}
+      resolve(message);
+    } else {
+       let Annotation = [];
+        snapshot.forEach(annotation => {
+          if(annotation.val().description) {
+            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude, description : annotation.val().description})
+          } else {
+            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude})
+          }
+        })
+        resolve(Annotation.reverse());
+    }
+  }) 
   }
 }
 export const fireService = new FireService();
