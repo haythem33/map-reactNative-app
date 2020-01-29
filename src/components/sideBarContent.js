@@ -104,8 +104,8 @@ class sideBarContent extends React.Component {
     }
     async updateStatut(key) {
       await fireService.updateStatut(key, this.state.maps);
-      this.getMaps();
-      this.props.navigation.closeDrawer();
+      await this.getMaps();
+      // this.props.navigation.closeDrawer();
     }
     getFirstCaratere(name) {
       let N =  name.toUpperCase();
