@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import MapboxGL from '@react-native-mapbox-gl/maps';
 import {fireService} from '../services/fireService';
@@ -27,7 +28,8 @@ class dashboardScreen extends React.Component {
       longitude: Number,
       latitude: Number,
       description: '',
-      Annotation : null
+      Annotation: null,
+      render: false,
     };
   }
   async componentDidMount() {
@@ -35,8 +37,9 @@ class dashboardScreen extends React.Component {
     const uid = auth().currentUser.uid;
     const ref = database().ref(`/users/${uid}/maps/`);
     ref.on('value', async () => {
+      this.setState({render: false});
       await fireService.getDashoardMap().then(map => {
-        this.setState({map: map});
+        this.setState({map: map, render: true});
         this.getAnnotation();
       });
     });
@@ -45,10 +48,11 @@ class dashboardScreen extends React.Component {
     this.setState({modalAnnotation: visible});
   }
   async fireInit() {
-    await fireService.getUserData().then(user => {
+    this.setState({render: false});
+    await fireService.getUserData().then(async user => {
       if (!user['error']) {
         this.setState({User: user.email});
-        this.getMap();
+        await this.getMap();
         this.getAnnotation();
       } else {
         fireService.UserInit();
@@ -57,17 +61,15 @@ class dashboardScreen extends React.Component {
     });
   }
   async getMap() {
+    this.setState({render: false});
     await fireService.getDashoardMap().then(map => {
-      if(map) {
-        this.setState({map: map});
+      if (map) {
+        this.setState({map: map, render: true});
       }
-      
     });
   }
   async addAnnotation() {
-    if (
-      this.state.name !== ''
-    ) {
+    if (this.state.name !== '') {
       if (this.state.description !== '') {
         let value = {
           AnnotationName: this.state.name,
@@ -76,7 +78,7 @@ class dashboardScreen extends React.Component {
           description: this.state.description,
         };
         await fireService.addAnnotation(value, this.state.map.key);
-        this.getAnnotation();
+        await this.getAnnotation();
         this.setState({modalAnnotation: false});
       } else {
         let value = {
@@ -85,7 +87,7 @@ class dashboardScreen extends React.Component {
           latitude: parseFloat(this.state.latitude),
         };
         await fireService.addAnnotation(value, this.state.map.key);
-        this.getAnnotation();
+        await this.getAnnotation();
         this.setState({modalAnnotation: false});
       }
     } else {
@@ -93,66 +95,88 @@ class dashboardScreen extends React.Component {
     }
   }
   async getAnnotation() {
-    if(this.state.map) {
+    if (this.state.map) {
       await fireService.getAnnotation(this.state.map.key).then(Annotation => {
-        if(!Annotation['error']) {
-            this.setState({Annotation : Annotation})
+        if (!Annotation['error']) {
+          this.setState({Annotation: Annotation});
         }
-      })
+      });
     }
   }
+
   render() {
-    let Annotation;
-    let AnnotationMap;
-    if (this.state.map === null) {
+    if (this.state.render === false) {
       return (
-        <View style={styleNoMap.container}>
-          <TouchableOpacity
-            onPress={this.props.navigation.toggleDrawer}
-            style={styleNoMap.buttonContainer}>
-            <Image
-              style={styleNoMap.addMapImage}
-              source={require('./../assets/icon/AddMap.png')}
-            />
-            <Text>Start by creating a new map </Text>
-          </TouchableOpacity>
+        <View style={(loadingStyle.container, loadingStyle.horizontal)}>
+          <ActivityIndicator size="large" color="#e15f41" />
         </View>
       );
     } else {
-      if (this.state.Annotation !== null) {
-        AnnotationMap = this.state.Annotation.map(A => {
-          return (
-            <MapboxGL.PointAnnotation
-              key={A.key}
-              id="pointAnnotation"
-              coordinate={[A.longitude,A.latitude]}>
-              <View style={styles.annotationContainer}>
-                <View style={styles.annotationFill} />
+      if (this.state.map === null) {
+        return (
+          <View style={styleNoMap.container}>
+            <TouchableOpacity
+              onPress={this.props.navigation.toggleDrawer}
+              style={styleNoMap.buttonContainer}>
+              <Image
+                style={styleNoMap.addMapImage}
+                source={require('./../assets/icon/AddMap.png')}
+              />
+              <Text>Start by creating a new map </Text>
+            </TouchableOpacity>
+          </View>
+        );
+      } else {
+        let Annotation;
+        let AnnotationMap;
+        let UserLocation = (
+          <MapboxGL.UserLocation renderMode="normal" visible={true} />
+        );
+        if (this.state.Annotation !== null) {
+          AnnotationMap = this.state.Annotation.map(A => {
+            return (
+              <MapboxGL.PointAnnotation
+                key={A.key}
+                id="pointAnnotation"
+                onSelected={() => alert(A.description)}
+                coordinate={[A.longitude, A.latitude]}>
+                <View style={styles.annotationContainer}>
+                  <View style={styles.annotationFill} />
+                </View>
+                <MapboxGL.Callout title={A.AnnotationName} />
+              </MapboxGL.PointAnnotation>
+            );
+          });
+          Annotation = this.state.Annotation.map(value => {
+            return (
+              <View
+                key={value.key}
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  marginLeft: 20,
+                }}>
+                <TouchableOpacity>
+                  <View
+                    style={{justifyContent: 'center', alignItems: 'center'}}>
+                    <Image
+                      style={{width: 30, height: 30}}
+                      source={require('./../assets/icon/AnnotationIcon.png')}
+                    />
+                    <Text
+                      style={{
+                        color: 'white',
+                        fontSize: 15,
+                      }}>
+                      {value.AnnotationName}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               </View>
-              <MapboxGL.Callout title={A.AnnotationName} />
-            </MapboxGL.PointAnnotation>
-          );
-        })
-        Annotation =  this.state.Annotation.map(value => {
-          return (
-            <View key={value.key}
-              style={{flexDirection: 'column', justifyContent: 'center', margin : 10}}>
-              <TouchableOpacity>
-                <Image
-                  source={require('./../assets/icon/AnnotationIcon.png')}
-                />
-                <Text
-                  style={{
-                    color: 'white',
-                    fontSize: 20,
-                    marginTop: 10,
-               }}>{value.AnnotationName}</Text>
-              </TouchableOpacity>
-            </View>
-          );
-        })
-      }
-      return (
+            );
+          });
+        }
+        return (
           <View style={styles.container}>
             <Modal
               animationType="slide"
@@ -162,118 +186,128 @@ class dashboardScreen extends React.Component {
               onRequestClose={() => {
                 Alert.alert('Modal has been closed.');
               }}>
-              <View style={modalStyle.container}>
-                <Image
-                  style={modalStyle.logo}
-                  source={require('./../assets/images/Logo2.png')}
-                />
-                <Text style={modalStyle.description}>
-                  fullfil the inputs to add a Annotation
-                </Text>
-                <View style={modalStyle.inputContainer}>
+              <ScrollView>
+                <View style={modalStyle.container}>
                   <Image
-                    style={modalStyle.inputIcon}
-                    source={require('./../assets/icon/AnnotationName.png')}
+                    style={modalStyle.logo}
+                    source={require('./../assets/images/Logo2.png')}
                   />
-                  <TextInput
-                    style={modalStyle.inputs}
-                    placeholder="name of the Annotation"
-                    keyboardType="default"
-                    underlineColorAndroid="transparent"
-                    placeholderTextColor="black"
-                    onChangeText={name => this.setState({name})}
-                  />
-                </View>
-                <View style={{flexDirection: 'row'}}>
-                  <View style={modalStyle.inputContainer2}>
+                  <Text style={modalStyle.description}>
+                    fullfil the inputs to add a Annotation
+                  </Text>
+                  <View style={modalStyle.inputContainer}>
                     <Image
                       style={modalStyle.inputIcon}
-                      source={require('./../assets/icon/longitude.png')}
+                      source={require('./../assets/icon/AnnotationName.png')}
                     />
                     <TextInput
                       style={modalStyle.inputs}
-                      placeholder="longitude"
-                      keyboardType="number-pad"
+                      placeholder="name of the Annotation"
+                      keyboardType="default"
                       underlineColorAndroid="transparent"
                       placeholderTextColor="black"
-                      onChangeText={longitude => this.setState({longitude})}
+                      onChangeText={name => this.setState({name})}
                     />
                   </View>
-                  <View style={modalStyle.inputContainer2}>
+                  <View style={{flexDirection: 'row'}}>
+                    <View style={modalStyle.inputContainer2}>
+                      <Image
+                        style={modalStyle.inputIcon}
+                        source={require('./../assets/icon/longitude.png')}
+                      />
+                      <TextInput
+                        style={modalStyle.inputs}
+                        placeholder="longitude"
+                        keyboardType="number-pad"
+                        underlineColorAndroid="transparent"
+                        placeholderTextColor="black"
+                        onChangeText={longitude => this.setState({longitude})}
+                      />
+                    </View>
+                    <View style={modalStyle.inputContainer2}>
+                      <Image
+                        style={modalStyle.inputIcon}
+                        source={require('./../assets/icon/latitude.png')}
+                      />
+                      <TextInput
+                        style={modalStyle.inputs}
+                        placeholder="latitude"
+                        keyboardType="number-pad"
+                        underlineColorAndroid="transparent"
+                        placeholderTextColor="black"
+                        onChangeText={latitude => this.setState({latitude})}
+                      />
+                    </View>
+                  </View>
+                  <View style={modalStyle.inputContainer3}>
                     <Image
                       style={modalStyle.inputIcon}
-                      source={require('./../assets/icon/latitude.png')}
+                      source={require('./../assets/icon/descriptionIcon.png')}
                     />
                     <TextInput
                       style={modalStyle.inputs}
-                      placeholder="latitude"
-                      keyboardType="number-pad"
-                      underlineColorAndroid="transparent"
+                      multiline={true}
+                      numberOfLines={10}
+                      placeholder="description (optional)"
                       placeholderTextColor="black"
-                      onChangeText={latitude => this.setState({latitude})}
+                      keyboardType="default"
+                      onChangeText={description => this.setState({description})}
                     />
                   </View>
+                  <View style={{flexDirection: 'row'}}>
+                    <TouchableOpacity onPress={() => this.addAnnotation()}>
+                      <Image
+                        style={{margin: 20}}
+                        source={require('./../assets/icon/addVerif.png')}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => this.setModalVisible(false)}>
+                      <Image
+                        style={{margin: 20}}
+                        source={require('./../assets/icon/removeMap.png')}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={modalStyle.inputContainer3}>
-                  <Image
-                    style={modalStyle.inputIcon}
-                    source={require('./../assets/icon/descriptionIcon.png')}
-                  />
-                  <TextInput
-                    style={modalStyle.inputs}
-                    multiline={true}
-                    numberOfLines={10}
-                    placeholder="description (optional)"
-                    placeholderTextColor="black"
-                    keyboardType="default"
-                    onChangeText={description => this.setState({description})}
-                  />
-                </View>
-                <View style={{flexDirection: 'row'}}>
-                  <TouchableOpacity onPress={() => this.addAnnotation()}>
-                    <Image
-                      style={{margin: 20}}
-                      source={require('./../assets/icon/addVerif.png')}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => this.setModalVisible(false)}>
-                    <Image
-                      style={{margin: 20}}
-                      source={require('./../assets/icon/removeMap.png')}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+              </ScrollView>
             </Modal>
             <View style={styles.map}>
               <MapboxGL.MapView
                 zoomEnabled={true}
+                rotateEnabled={false}
                 styleURL={MapboxGL.StyleURL.Street}
-                zoomLevel={15}
+                userTrackingMode={true}
+                zoomLevel={16}
                 centerCoordinate={[11.256, 43.77]}
                 style={styles.container}>
+                {UserLocation}
+                <MapboxGL.Camera
+                  zoomLevel={16}
+                  followUserMode={'normal'}
+                  followUserLocation={true}
+                />
                 {AnnotationMap}
               </MapboxGL.MapView>
             </View>
             <View
               style={{
-                padding: 15,
+                padding: 7,
                 backgroundColor: '#e15f41',
               }}>
               <ScrollView horizontal={true}>
-              <View
-              style={{flexDirection: 'column', justifyContent: 'center'}}>
-                <TouchableOpacity onPress={() => this.setModalVisible(true)}>
-                <Image
-                  source={require('./../assets/icon/add.png')}
-                />
-                </TouchableOpacity>
-              </View>
-               {Annotation}
+                <View
+                  style={{flexDirection: 'column', justifyContent: 'center'}}>
+                  <TouchableOpacity onPress={() => this.setModalVisible(true)}>
+                    <Image source={require('./../assets/icon/add.png')} />
+                  </TouchableOpacity>
+                </View>
+                {Annotation}
               </ScrollView>
             </View>
           </View>
         );
+      }
     }
   }
 }
@@ -393,6 +427,18 @@ const modalStyle = StyleSheet.create({
   },
   signUpText: {
     color: 'white',
+  },
+});
+const loadingStyle = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  horizontal: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    marginTop : 50
   },
 });
 export default dashboardScreen;

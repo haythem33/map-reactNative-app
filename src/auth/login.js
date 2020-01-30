@@ -56,13 +56,14 @@ render() {
 }
 async login(email,password) {
   if (this.state.email !== '' && this.state.password !== '') {
-    await auth().signInWithEmailAndPassword(email,password).then((user) => {
-      if(user) {
-          this.props.navigation.navigate('dashboard');
-      } else {
-        alert('you have insert wrong information')
-      }
-  })
+    try {
+      await auth().signInWithEmailAndPassword(email,password);
+      this.props.navigation.navigate('Dashboard')
+  } catch (e) {
+       if(e) {
+         alert('invalid information')
+       }
+  }  
   } else {
     alert('you must insert all information');
   } 

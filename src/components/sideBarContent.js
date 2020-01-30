@@ -105,7 +105,7 @@ class sideBarContent extends React.Component {
     async updateStatut(key) {
       await fireService.updateStatut(key, this.state.maps);
       await this.getMaps();
-      // this.props.navigation.closeDrawer();
+      this.props.navigation.closeDrawer();
     }
     getFirstCaratere(name) {
       let N =  name.toUpperCase();
@@ -132,20 +132,21 @@ class sideBarContent extends React.Component {
                   </View>
                 </TouchableOpacity>
               );
+            } else {
+              return (
+                <TouchableOpacity
+                  onPress={() => this.updateStatut(value.key)}
+                  key={value.key}>
+                  <View style={styles.inputContainer}>
+                    <Image
+                      style={styles.inputIcon}
+                      source={require('./../assets/icon/mapInput.png')}
+                    />
+                    <Text style={styles.mapName}>{value.mapName}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
             }
-            return (
-              <TouchableOpacity
-                onPress={() => this.updateStatut(value.key)}
-                key={value.key}>
-                <View style={styles.inputContainer}>
-                  <Image
-                    style={styles.inputIcon}
-                    source={require('./../assets/icon/mapInput.png')}
-                  />
-                  <Text style={styles.mapName}>{value.mapName}</Text>
-                </View>
-              </TouchableOpacity>
-            );
           });
       }
       return (

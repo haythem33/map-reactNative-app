@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "183916938559",
+    "firebase_url": "https://ace-duality-235323.firebaseio.com",
+    "project_id": "ace-duality-235323",
+    "storage_bucket": "ace-duality-235323.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183916938559:android:91b38f82ce99de2f273f8a",
+        "android_client_info": {
+          "package_name": "com.bilouapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "183916938559-sjcn9n4r7akfgsjjmnj9o645ujmq03on.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bilouapp",
+            "certificate_hash": "86805eefc0eb1ec5e413b00cf86fcee5d1c32ae5"
+          }
+        },
+        {
+          "client_id": "183916938559-469kacl3ennrqrdrgnnjhihvjhj7f22n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCia4o0eb1BdcyovpJ44K6MYpQaTOGrxU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "183916938559-469kacl3ennrqrdrgnnjhihvjhj7f22n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "183916938559-7he8g8ti449gqcsndu0ojt3oo81hco91.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.bilouApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
