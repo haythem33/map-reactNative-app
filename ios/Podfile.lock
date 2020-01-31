@@ -305,6 +305,10 @@ PODS:
     - ReactCommon/jscallinvoker (= 0.61.5)
   - RNCMaskedView (0.1.6):
     - React
+  - RNFBAnalytics (6.2.0):
+    - Firebase/Core (~> 6.13.0)
+    - React
+    - RNFBApp
   - RNFBApp (6.2.0):
     - Firebase/Core (~> 6.13.0)
     - React
@@ -355,6 +359,7 @@ DEPENDENCIES:
   - ReactCommon/jscallinvoker (from `../node_modules/react-native/ReactCommon`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
+  - "RNFBAnalytics (from `../node_modules/@react-native-firebase/analytics`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
   - "RNFBDatabase (from `../node_modules/@react-native-firebase/database`)"
@@ -437,6 +442,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCMaskedView:
     :path: "../node_modules/@react-native-community/masked-view"
+  RNFBAnalytics:
+    :path: "../node_modules/@react-native-firebase/analytics"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBAuth:
@@ -495,6 +502,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: a49a1f42bf8f5acf1c3e297097517c6b3af377ad
   ReactCommon: 198c7c8d3591f975e5431bec1b0b3b581aa1c5dd
   RNCMaskedView: e5b99bc191945f157adeede68da9d424462de177
+  RNFBAnalytics: 57dc0bfad4e40f68779757653676699072651218
   RNFBApp: 5b215aacc09105a1761de31b9a0eb2abcce06253
   RNFBAuth: 61673c0d38ce225c315e7be13a1b494904baedd2
   RNFBDatabase: 267f476097111054553ecb99208201945961efa5

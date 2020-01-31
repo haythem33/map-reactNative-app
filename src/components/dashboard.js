@@ -30,6 +30,7 @@ class dashboardScreen extends React.Component {
       description: '',
       Annotation: null,
       render: false,
+      userVisible : false
     };
   }
   async componentDidMount() {
@@ -48,7 +49,6 @@ class dashboardScreen extends React.Component {
     this.setState({modalAnnotation: visible});
   }
   async fireInit() {
-    this.setState({render: false});
     await fireService.getUserData().then(async user => {
       if (!user['error']) {
         this.setState({User: user.email});
@@ -75,6 +75,7 @@ class dashboardScreen extends React.Component {
           AnnotationName: this.state.name,
           longitude: parseFloat(this.state.longitude),
           latitude: parseFloat(this.state.latitude),
+          statut : false,
           description: this.state.description,
         };
         await fireService.addAnnotation(value, this.state.map.key);
@@ -85,6 +86,7 @@ class dashboardScreen extends React.Component {
           AnnotationName: this.state.name,
           longitude: parseFloat(this.state.longitude),
           latitude: parseFloat(this.state.latitude),
+          statut : false
         };
         await fireService.addAnnotation(value, this.state.map.key);
         await this.getAnnotation();
@@ -103,7 +105,14 @@ class dashboardScreen extends React.Component {
       });
     }
   }
-
+  async showAnnotation(annotationKey) {
+    await fireService.updateStatutAnnotation(annotationKey, this.state.Annotation, this.state.map.key);
+    this.getAnnotation();
+  }
+  async showUser() {
+   await fireService.showUser(this.state.map.key, this.state.Annotation);
+   this.getAnnotation();
+  }
   render() {
     if (this.state.render === false) {
       return (
@@ -129,6 +138,8 @@ class dashboardScreen extends React.Component {
       } else {
         let Annotation;
         let AnnotationMap;
+        let visibleAnnotation;
+        let IconUser;
         let UserLocation = (
           <MapboxGL.UserLocation renderMode="normal" visible={true} />
         );
@@ -148,34 +159,95 @@ class dashboardScreen extends React.Component {
             );
           });
           Annotation = this.state.Annotation.map(value => {
-            return (
-              <View
-                key={value.key}
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  marginLeft: 20,
-                }}>
-                <TouchableOpacity>
-                  <View
-                    style={{justifyContent: 'center', alignItems: 'center'}}>
-                    <Image
-                      style={{width: 30, height: 30}}
-                      source={require('./../assets/icon/AnnotationIcon.png')}
-                    />
-                    <Text
-                      style={{
-                        color: 'white',
-                        fontSize: 15,
-                      }}>
-                      {value.AnnotationName}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            );
+            if(value.statut === true) {
+              return (
+                <View
+                  key={value.key}
+                  style={{
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    marginLeft: 20,
+                    borderTopWidth : 1,
+                    borderTopColor : 'white'
+                  }}>
+                  <TouchableOpacity onPress={() => this.showAnnotation(value.key)}>
+                    <View
+                      style={{justifyContent: 'center', alignItems: 'center'}}>
+                      <Image
+                        style={{width: 30, height: 30}}
+                        source={require('./../assets/icon/AnnotationIcon.png')}
+                      />
+                      <Text
+                        style={{
+                          color: 'white',
+                          fontSize: 15,
+                        }}>
+                        {value.AnnotationName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            } else {
+              return (
+                <View
+                  key={value.key}
+                  style={{
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    marginLeft: 20,
+                  }}>
+                  <TouchableOpacity onPress={() => this.showAnnotation(value.key)}>
+                    <View
+                      style={{justifyContent: 'center', alignItems: 'center'}}>
+                      <Image
+                        style={{width: 30, height: 30}}
+                        source={require('./../assets/icon/AnnotationIcon.png')}
+                      />
+                      <Text
+                        style={{
+                          color: 'white',
+                          fontSize: 15,
+                        }}>
+                        {value.AnnotationName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            }
           });
-        }
+          visibleAnnotation = this.state.Annotation.map((A,i) => {
+            if(A.statut === true) {
+              return (
+                <MapboxGL.Camera key={A.key} zoomLevel={16} centerCoordinate={[A.longitude, A.latitude]}/>
+              )
+            } else if ( i === (this.state.Annotation.length - 1)) {
+                return (
+                <MapboxGL.Camera zoomLevel={16} followUserLocation={true}/>
+              )
+            }
+          })
+          if(this.state.userVisible === true) {
+            IconUser = (
+              <View
+                  style={{flexDirection: 'column', justifyContent: 'center', borderLeftColor : 'white', borderLeftWidth : 1, padding : 5}}>
+                  <TouchableOpacity onPress={() => this.showUser()}>
+                    <Image source={require('./../assets/icon/UserSelect.png')} />
+                  </TouchableOpacity>
+                </View>
+            )
+          } else {
+            IconUser = (
+              <View
+                  style={{flexDirection: 'column', justifyContent: 'center', borderLeftColor : 'white', borderLeftWidth : 1, padding : 5}}>
+                  <TouchableOpacity onPress={() => this.showUser()}>
+                    <Image source={require('./../assets/icon/User.png')} />
+                  </TouchableOpacity>
+                </View>
+            )
+          }
+         }
         return (
           <View style={styles.container}>
             <Modal
@@ -186,7 +258,7 @@ class dashboardScreen extends React.Component {
               onRequestClose={() => {
                 Alert.alert('Modal has been closed.');
               }}>
-              <ScrollView>
+              {/* <ScrollView> */}
                 <View style={modalStyle.container}>
                   <Image
                     style={modalStyle.logo}
@@ -270,7 +342,7 @@ class dashboardScreen extends React.Component {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </ScrollView>
+              {/* </ScrollView> */}
             </Modal>
             <View style={styles.map}>
               <MapboxGL.MapView
@@ -282,11 +354,7 @@ class dashboardScreen extends React.Component {
                 centerCoordinate={[11.256, 43.77]}
                 style={styles.container}>
                 {UserLocation}
-                <MapboxGL.Camera
-                  zoomLevel={16}
-                  followUserMode={'normal'}
-                  followUserLocation={true}
-                />
+                {visibleAnnotation}
                 {AnnotationMap}
               </MapboxGL.MapView>
             </View>
@@ -294,16 +362,18 @@ class dashboardScreen extends React.Component {
               style={{
                 padding: 7,
                 backgroundColor: '#e15f41',
+                flexDirection : 'row'
               }}>
-              <ScrollView horizontal={true}>
                 <View
-                  style={{flexDirection: 'column', justifyContent: 'center'}}>
+                  style={{flexDirection: 'column', justifyContent: 'center' ,borderRightWidth : 1, borderRightColor : 'white', padding : 5}}>
                   <TouchableOpacity onPress={() => this.setModalVisible(true)}>
                     <Image source={require('./../assets/icon/add.png')} />
                   </TouchableOpacity>
                 </View>
+              <ScrollView horizontal={true}>
                 {Annotation}
               </ScrollView>
+              {IconUser}
             </View>
           </View>
         );

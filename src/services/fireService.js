@@ -96,14 +96,35 @@ class FireService {
        let Annotation = [];
         snapshot.forEach(annotation => {
           if(annotation.val().description) {
-            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude, description : annotation.val().description})
+            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude, description : annotation.val().description, statut : annotation.val().statut})
           } else {
-            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude})
+            Annotation.push({key : annotation.key, AnnotationName : annotation.val().AnnotationName, longitude : annotation.val().longitude, latitude : annotation.val().latitude, statut : annotation.val().statut})
           }
         })
         resolve(Annotation.reverse());
     }
   }) 
   }
+ async updateStatutAnnotation(AnnotationKey,AnnotationList,mapKey) {
+     const uid = auth().currentUser.uid;
+     AnnotationList.map((A) => {
+       if(A.key === AnnotationKey) {
+        const ref = database().ref(`/users/${uid}/maps/${mapKey}/Annotation/${AnnotationKey}`);
+        ref.update({statut : true})
+       } else {
+         const ref = database().ref(`/users/${uid}/maps/${mapKey}/Annotation/${A.key}`)
+         ref.update({statut : false})
+       }
+     })
+  }
+ async showUser(mapKey, AnnotationList) {
+  const uid = auth().currentUser.uid;
+  AnnotationList.map(A => {
+    const ref = database().ref(`/users/${uid}/maps/${mapKey}/Annotation/${A.key}`);
+    ref.update({statut : false});
+  })
+  
+
+ }
 }
 export const fireService = new FireService();

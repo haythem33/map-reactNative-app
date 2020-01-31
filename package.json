@@ -18,7 +18,7 @@
     "@react-native-mapbox-gl/maps": "^7.0.9",
     "add": "^2.0.6",
     "i": "^0.3.6",
-    "npm": "^6.13.6",
+    "npm": "^6.13.7",
     "react": "16.9.0",
     "react-native": "0.61.5",
     "react-native-gesture-handler": "^1.5.3",
